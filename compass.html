@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compass and Speedometer</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        text-align: center;
+        background: #111;
+        color: #fff;
+      }
+      .compass {
+        margin: 20px auto;
+        width: 220px;
+        height: 220px;
+        border: 2px solid #555;
+        border-radius: 50%;
+        position: relative;
+      }
+      .needle {
+        width: 4px;
+        height: 100px;
+        background: red;
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform-origin: 50% 100%;
+      }
+      #heading {
+        margin: 10px;
+        font-size: 18px;
+      }
+      #speed {
+        font-size: 32px;
+        margin: 20px;
+      }
+      button {
+        margin: 5px;
+        padding: 10px;
+      }
+      .label {
+        position: absolute;
+        font-size: 14px;
+        font-weight: bold;
+        color: #fff;
+      }
+      .north {
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+      }
+      .east {
+        top: 50%;
+        right: 5px;
+        transform: translateY(-50%);
+        font-size: 20px;
+      }
+      .south {
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+      }
+      .west {
+        top: 50%;
+        left: 5px;
+        transform: translateY(-50%);
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Compass</h2>
+    <div class="compass">
+      <div id="needle" class="needle"></div>
+      <div class="label north">N</div>
+      <div class="label east">E</div>
+      <div class="label south">S</div>
+      <div class="label west">W</div>
+    </div>
+    <div id="heading">— °</div>
+
+    <h2>Speedometer</h2>
+    <div id="speed">— km/h</div>
+    <button id="gpsBtn">Start GPS</button>
+
+    <script>
+      const needle = document.getElementById("needle");
+      const headingEl = document.getElementById("heading");
+      let lastHeading = 0;
+
+      window.addEventListener("deviceorientation", (e) => {
+        if (e.alpha !== null) {
+          const heading = 360 - e.alpha;
+          needle.style.transform = `rotate(${heading}deg)`;
+          headingEl.textContent =
+            Math.round(heading) + "° " + directionName(heading);
+          lastHeading = heading;
+        }
+      });
+
+      function directionName(deg) {
+        if (deg >= 337.5 || deg < 22.5) return "North";
+        if (deg < 67.5) return "North-East";
+        if (deg < 112.5) return "East";
+        if (deg < 157.5) return "South-East";
+        if (deg < 202.5) return "South";
+        if (deg < 247.5) return "South-West";
+        if (deg < 292.5) return "West";
+        return "North-West";
+      }
+
+      const speedEl = document.getElementById("speed");
+      const gpsBtn = document.getElementById("gpsBtn");
+      let watchId = null;
+
+      gpsBtn.onclick = () => {
+        if (watchId === null) {
+          if (navigator.geolocation) {
+            watchId = navigator.geolocation.watchPosition((pos) => {
+              if (pos.coords.speed != null) {
+                const kmh = pos.coords.speed * 3.6;
+                speedEl.textContent = kmh.toFixed(1) + " km/h";
+              } else {
+                speedEl.textContent = "0 km/h";
+              }
+            });
+            gpsBtn.textContent = "Stop GPS";
+          }
+        } else {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+          gpsBtn.textContent = "Start GPS";
+          speedEl.textContent = "— km/h";
+        }
+      };
+    </script>
+  </body>
+</html>
